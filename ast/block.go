@@ -477,3 +477,38 @@ func NewHTMLBlock(typ HTMLBlockType) *HTMLBlock {
 		ClosureLine:   textm.NewSegment(-1, -1),
 	}
 }
+
+// A LinkReferenceDefinitionBlock struct represents a link reference definition in the Markdown text.
+type LinkReferenceDefinitionBlock struct {
+	BaseBlock
+
+	// Destination is the destination(URL) of this link.
+	Destination []byte
+
+	// Title is the title of this link.
+	Title []byte
+}
+
+// Dump implements Node.Dump.
+func (n *LinkReferenceDefinitionBlock) Dump(source []byte, level int) {
+	m := map[string]string{}
+	m["Destination"] = string(n.Destination)
+	m["Title"] = string(n.Title)
+	DumpHelper(n, source, level, m, nil)
+}
+
+// KindLinkReferenceDefinition is a NodeKind of the LinkReferenceDefinition node.
+var KindLinkReferenceDefinition = NewNodeKind("LinkReferenceDefinition")
+
+// Kind implements Node.Kind.
+func (n *LinkReferenceDefinitionBlock) Kind() NodeKind {
+	return KindLinkReferenceDefinition
+}
+
+// NewLinkReferenceDefinitionBlock returns a new LinkReferenceDefinition node.
+func NewLinkReferenceDefinitionBlock() *LinkReferenceDefinitionBlock {
+	c := &LinkReferenceDefinition{
+		BaseBlock: BaseBlock{},
+	}
+	return c
+}
