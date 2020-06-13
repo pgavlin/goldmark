@@ -6,10 +6,11 @@ import (
 )
 
 type emphasisDelimiterProcessor struct {
+	marker byte
 }
 
 func (p *emphasisDelimiterProcessor) IsDelimiter(b byte) bool {
-	return b == '*' || b == '_'
+	return b == p.marker
 }
 
 func (p *emphasisDelimiterProcessor) CanOpenCloser(opener, closer *Delimiter) bool {
@@ -19,8 +20,6 @@ func (p *emphasisDelimiterProcessor) CanOpenCloser(opener, closer *Delimiter) bo
 func (p *emphasisDelimiterProcessor) OnMatch(consumes int) ast.Node {
 	return ast.NewEmphasis(consumes)
 }
-
-var defaultEmphasisDelimiterProcessor = &emphasisDelimiterProcessor{}
 
 type emphasisParser struct {
 }
@@ -39,7 +38,7 @@ func (s *emphasisParser) Trigger() []byte {
 func (s *emphasisParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.Node {
 	before := block.PrecendingCharacter()
 	line, segment := block.PeekLine()
-	node := ScanDelimiter(line, before, 1, defaultEmphasisDelimiterProcessor)
+	node := ScanDelimiter(line, before, 1, &emphasisDelimiterProcessor{marker: line[0]})
 	if node == nil {
 		return nil
 	}

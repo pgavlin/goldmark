@@ -29,19 +29,19 @@ func TestWalk(t *testing.T) {
 	}{
 		{
 			"visits all in depth first order",
-			node(NewDocument(), node(NewHeading(1), NewText()), NewLink()),
+			node(NewDocument(), node(NewHeading(false, 1), NewText()), NewLink()),
 			[]NodeKind{KindDocument, KindHeading, KindText, KindLink},
 			map[NodeKind]WalkStatus{},
 		},
 		{
 			"stops after heading",
-			node(NewDocument(), node(NewHeading(1), NewText()), NewLink()),
+			node(NewDocument(), node(NewHeading(false, 1), NewText()), NewLink()),
 			[]NodeKind{KindDocument, KindHeading},
 			map[NodeKind]WalkStatus{KindHeading: WalkStop},
 		},
 		{
 			"skip children",
-			node(NewDocument(), node(NewHeading(1), NewText()), NewLink()),
+			node(NewDocument(), node(NewHeading(false, 1), NewText()), NewLink()),
 			[]NodeKind{KindDocument, KindHeading, KindLink},
 			map[NodeKind]WalkStatus{KindHeading: WalkSkipChildren},
 		},

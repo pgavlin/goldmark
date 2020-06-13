@@ -138,6 +138,10 @@ func IsParagraph(node Node) bool {
 // A Heading struct represents headings like SetextHeading and ATXHeading.
 type Heading struct {
 	BaseBlock
+
+	// IsSetext is true if the heading is a setext heading.
+	IsSetext bool
+
 	// Level returns a level of this heading.
 	// This value is between 1 and 6.
 	Level int
@@ -160,9 +164,10 @@ func (n *Heading) Kind() NodeKind {
 }
 
 // NewHeading returns a new Heading node.
-func NewHeading(level int) *Heading {
+func NewHeading(isSetext bool, level int) *Heading {
 	return &Heading{
 		BaseBlock: BaseBlock{},
+		IsSetext:  isSetext,
 		Level:     level,
 	}
 }

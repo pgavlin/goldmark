@@ -329,6 +329,9 @@ func NewCodeSpan() *CodeSpan {
 type Emphasis struct {
 	BaseInline
 
+	// Marker is the character used to indicate emphasis.
+	Marker byte
+
 	// Level is a level of the emphasis.
 	Level int
 }
@@ -336,7 +339,8 @@ type Emphasis struct {
 // Dump implements Node.Dump.
 func (n *Emphasis) Dump(source []byte, level int) {
 	m := map[string]string{
-		"Level": fmt.Sprintf("%v", n.Level),
+		"Marker": string([]byte{n.Marker}),
+		"Level":  fmt.Sprintf("%v", n.Level),
 	}
 	DumpHelper(n, source, level, m, nil)
 }

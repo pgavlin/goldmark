@@ -102,7 +102,7 @@ func (b *atxHeadingParser) Open(parent ast.Node, reader text.Reader, pc Context)
 	origstart := start
 	stop := len(line) - util.TrimRightSpaceLength(line)
 
-	node := ast.NewHeading(level)
+	node := ast.NewHeading(false, level)
 	parsed := false
 	if b.Attribute { // handles special case like ### heading ### {#id}
 		start--
