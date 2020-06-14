@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	textm "github.com/yuin/goldmark/text"
@@ -147,12 +148,12 @@ func (n *Text) Text(source []byte) []byte {
 }
 
 // Dump implements Node.Dump.
-func (n *Text) Dump(source []byte, level int) {
+func (n *Text) Dump(w io.Writer, source []byte, level int) {
 	fs := textFlagsString(n.flags)
 	if len(fs) != 0 {
 		fs = "(" + fs + ")"
 	}
-	fmt.Printf("%sText%s: \"%s\"\n", strings.Repeat("    ", level), fs, strings.TrimRight(string(n.Text(source)), "\n"))
+	fmt.Fprintf(w, "%sText%s: \"%s\"\n", strings.Repeat("    ", level), fs, strings.TrimRight(string(n.Text(source)), "\n"))
 }
 
 // KindText is a NodeKind of the Text node.
@@ -262,12 +263,12 @@ func (n *String) Text(source []byte) []byte {
 }
 
 // Dump implements Node.Dump.
-func (n *String) Dump(source []byte, level int) {
+func (n *String) Dump(w io.Writer, source []byte, level int) {
 	fs := textFlagsString(n.flags)
 	if len(fs) != 0 {
 		fs = "(" + fs + ")"
 	}
-	fmt.Printf("%sString%s: \"%s\"\n", strings.Repeat("    ", level), fs, strings.TrimRight(string(n.Value), "\n"))
+	fmt.Fprintf(w, "%sString%s: \"%s\"\n", strings.Repeat("    ", level), fs, strings.TrimRight(string(n.Value), "\n"))
 }
 
 // KindString is a NodeKind of the String node.
@@ -306,8 +307,8 @@ func (n *CodeSpan) IsBlank(source []byte) bool {
 }
 
 // Dump implements Node.Dump
-func (n *CodeSpan) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *CodeSpan) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindCodeSpan is a NodeKind of the CodeSpan node.
@@ -337,12 +338,12 @@ type Emphasis struct {
 }
 
 // Dump implements Node.Dump.
-func (n *Emphasis) Dump(source []byte, level int) {
+func (n *Emphasis) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{
 		"Marker": string([]byte{n.Marker}),
 		"Level":  fmt.Sprintf("%v", n.Level),
 	}
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindEmphasis is a NodeKind of the Emphasis node.
@@ -405,13 +406,13 @@ type Link struct {
 }
 
 // Dump implements Node.Dump.
-func (n *Link) Dump(source []byte, level int) {
+func (n *Link) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["ReferenceType"] = fmt.Sprintf("%v", n.ReferenceType)
 	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindLink is a NodeKind of the Link node.
@@ -438,13 +439,13 @@ type Image struct {
 }
 
 // Dump implements Node.Dump.
-func (n *Image) Dump(source []byte, level int) {
+func (n *Image) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["ReferenceType"] = fmt.Sprintf("%v", n.ReferenceType)
 	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindImage is a NodeKind of the Image node.
@@ -502,12 +503,12 @@ type AutoLink struct {
 func (n *AutoLink) Inline() {}
 
 // Dump implements Node.Dump
-func (n *AutoLink) Dump(source []byte, level int) {
+func (n *AutoLink) Dump(w io.Writer, source []byte, level int) {
 	segment := n.value.Segment
 	m := map[string]string{
 		"Value": string(segment.Value(source)),
 	}
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindAutoLink is a NodeKind of the AutoLink node.
@@ -555,7 +556,7 @@ type RawHTML struct {
 func (n *RawHTML) Inline() {}
 
 // Dump implements Node.Dump.
-func (n *RawHTML) Dump(source []byte, level int) {
+func (n *RawHTML) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	t := []string{}
 	for i := 0; i < n.Segments.Len(); i++ {
@@ -563,7 +564,7 @@ func (n *RawHTML) Dump(source []byte, level int) {
 		t = append(t, string(segment.Value(source)))
 	}
 	m["RawText"] = strings.Join(t, "")
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindRawHTML is a NodeKind of the RawHTML node.

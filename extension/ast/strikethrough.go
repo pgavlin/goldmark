@@ -3,6 +3,7 @@ package ast
 
 import (
 	gast "github.com/yuin/goldmark/ast"
+	"io"
 )
 
 // A Strikethrough struct represents a strikethrough of GFM text.
@@ -11,8 +12,8 @@ type Strikethrough struct {
 }
 
 // Dump implements Node.Dump.
-func (n *Strikethrough) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *Strikethrough) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindStrikethrough is a NodeKind of the Strikethrough node.

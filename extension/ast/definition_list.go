@@ -2,6 +2,7 @@ package ast
 
 import (
 	gast "github.com/yuin/goldmark/ast"
+	"io"
 )
 
 // A DefinitionList struct represents a definition list of Markdown
@@ -13,8 +14,8 @@ type DefinitionList struct {
 }
 
 // Dump implements Node.Dump.
-func (n *DefinitionList) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *DefinitionList) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindDefinitionList is a NodeKind of the DefinitionList node.
@@ -40,8 +41,8 @@ type DefinitionTerm struct {
 }
 
 // Dump implements Node.Dump.
-func (n *DefinitionTerm) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *DefinitionTerm) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindDefinitionTerm is a NodeKind of the DefinitionTerm node.
@@ -65,8 +66,8 @@ type DefinitionDescription struct {
 }
 
 // Dump implements Node.Dump.
-func (n *DefinitionDescription) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *DefinitionDescription) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindDefinitionDescription is a NodeKind of the DefinitionDescription node.

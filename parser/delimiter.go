@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"unicode"
 
@@ -61,8 +62,8 @@ type Delimiter struct {
 func (d *Delimiter) Inline() {}
 
 // Dump implements Node.Dump.
-func (d *Delimiter) Dump(source []byte, level int) {
-	fmt.Printf("%sDelimiter: \"%s\"\n", strings.Repeat("    ", level), string(d.Text(source)))
+func (d *Delimiter) Dump(w io.Writer, source []byte, level int) {
+	fmt.Fprintf(w, "%sDelimiter: \"%s\"\n", strings.Repeat("    ", level), string(d.Text(source)))
 }
 
 var kindDelimiter = ast.NewNodeKind("Delimiter")

@@ -4,6 +4,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"strings"
 
 	textm "github.com/yuin/goldmark/text"
@@ -120,7 +121,7 @@ type Node interface {
 	// This function completely aimed for debugging.
 	// level is a indent level. Implementer should indent informations with
 	// 2 * level spaces.
-	Dump(source []byte, level int)
+	Dump(w io.Writer, source []byte, level int)
 
 	// Text returns text values of this node.
 	Text(source []byte) []byte
@@ -419,30 +420,30 @@ func (n *BaseNode) RemoveAttributes() {
 // DumpHelper is a helper function to implement Node.Dump.
 // kv is pairs of an attribute name and an attribute value.
 // cb is a function called after wrote a name and attributes.
-func DumpHelper(v Node, source []byte, level int, kv map[string]string, cb func(int)) {
+func DumpHelper(w io.Writer, v Node, source []byte, level int, kv map[string]string, cb func(int)) {
 	name := v.Kind().String()
 	indent := strings.Repeat("    ", level)
-	fmt.Printf("%s%s {\n", indent, name)
+	fmt.Fprintf(w, "%s%s {\n", indent, name)
 	indent2 := strings.Repeat("    ", level+1)
 	if v.Type() == TypeBlock {
-		fmt.Printf("%sRawText: \"", indent2)
+		fmt.Fprintf(w, "%sRawText: \"", indent2)
 		for i := 0; i < v.Lines().Len(); i++ {
 			line := v.Lines().At(i)
-			fmt.Printf("%s", line.Value(source))
+			fmt.Fprintf(w, "%s", line.Value(source))
 		}
-		fmt.Printf("\"\n")
-		fmt.Printf("%sHasBlankPreviousLines: %v\n", indent2, v.HasBlankPreviousLines())
+		fmt.Fprintf(w, "\"\n")
+		fmt.Fprintf(w, "%sHasBlankPreviousLines: %v\n", indent2, v.HasBlankPreviousLines())
 	}
 	for name, value := range kv {
-		fmt.Printf("%s%s: %s\n", indent2, name, value)
+		fmt.Fprintf(w, "%s%s: %s\n", indent2, name, value)
 	}
 	if cb != nil {
 		cb(level + 1)
 	}
 	for c := v.FirstChild(); c != nil; c = c.NextSibling() {
-		c.Dump(source, level+1)
+		c.Dump(w, source, level+1)
 	}
-	fmt.Printf("%s}\n", indent)
+	fmt.Fprintf(w, "%s}\n", indent)
 }
 
 // WalkStatus represents a current status of the Walk function.

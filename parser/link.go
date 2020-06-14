@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -39,8 +40,8 @@ func (s *linkLabelState) Text(source []byte) []byte {
 	return s.Segment.Value(source)
 }
 
-func (s *linkLabelState) Dump(source []byte, level int) {
-	fmt.Printf("%slinkLabelState: \"%s\"\n", strings.Repeat("    ", level), s.Text(source))
+func (s *linkLabelState) Dump(w io.Writer, source []byte, level int) {
+	fmt.Fprintf(w, "%slinkLabelState: \"%s\"\n", strings.Repeat("    ", level), s.Text(source))
 }
 
 var kindLinkLabelState = ast.NewNodeKind("LinkLabelState")

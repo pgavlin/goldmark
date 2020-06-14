@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	gast "github.com/yuin/goldmark/ast"
+	"io"
 )
 
 // A FootnoteLink struct represents a link to a footnote of Markdown
@@ -13,10 +14,10 @@ type FootnoteLink struct {
 }
 
 // Dump implements Node.Dump.
-func (n *FootnoteLink) Dump(source []byte, level int) {
+func (n *FootnoteLink) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Index"] = fmt.Sprintf("%v", n.Index)
-	gast.DumpHelper(n, source, level, m, nil)
+	gast.DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindFootnoteLink is a NodeKind of the FootnoteLink node.
@@ -42,10 +43,10 @@ type FootnoteBackLink struct {
 }
 
 // Dump implements Node.Dump.
-func (n *FootnoteBackLink) Dump(source []byte, level int) {
+func (n *FootnoteBackLink) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Index"] = fmt.Sprintf("%v", n.Index)
-	gast.DumpHelper(n, source, level, m, nil)
+	gast.DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindFootnoteBackLink is a NodeKind of the FootnoteBackLink node.
@@ -72,11 +73,11 @@ type Footnote struct {
 }
 
 // Dump implements Node.Dump.
-func (n *Footnote) Dump(source []byte, level int) {
+func (n *Footnote) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Index"] = fmt.Sprintf("%v", n.Index)
 	m["Ref"] = fmt.Sprintf("%s", n.Ref)
-	gast.DumpHelper(n, source, level, m, nil)
+	gast.DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindFootnote is a NodeKind of the Footnote node.
@@ -103,10 +104,10 @@ type FootnoteList struct {
 }
 
 // Dump implements Node.Dump.
-func (n *FootnoteList) Dump(source []byte, level int) {
+func (n *FootnoteList) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Count"] = fmt.Sprintf("%v", n.Count)
-	gast.DumpHelper(n, source, level, m, nil)
+	gast.DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindFootnoteList is a NodeKind of the FootnoteList node.

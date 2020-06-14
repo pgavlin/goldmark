@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	gast "github.com/yuin/goldmark/ast"
+	"io"
 	"strings"
 )
 
@@ -46,18 +47,18 @@ type Table struct {
 }
 
 // Dump implements Node.Dump
-func (n *Table) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, func(level int) {
+func (n *Table) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, func(level int) {
 		indent := strings.Repeat("    ", level)
-		fmt.Printf("%sAlignments {\n", indent)
+		fmt.Fprintf(w, "%sAlignments {\n", indent)
 		for i, alignment := range n.Alignments {
 			indent2 := strings.Repeat("    ", level+1)
-			fmt.Printf("%s%s", indent2, alignment.String())
+			fmt.Fprintf(w, "%s%s", indent2, alignment.String())
 			if i != len(n.Alignments)-1 {
-				fmt.Println("")
+				fmt.Fprintln(w, "")
 			}
 		}
-		fmt.Printf("\n%s}\n", indent)
+		fmt.Fprintf(w, "\n%s}\n", indent)
 	})
 }
 
@@ -83,8 +84,8 @@ type TableRow struct {
 }
 
 // Dump implements Node.Dump.
-func (n *TableRow) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *TableRow) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindTableRow is a NodeKind of the TableRow node.
@@ -115,8 +116,8 @@ func (n *TableHeader) Kind() gast.NodeKind {
 }
 
 // Dump implements Node.Dump.
-func (n *TableHeader) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *TableHeader) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // NewTableHeader returns a new TableHeader node.
@@ -137,8 +138,8 @@ type TableCell struct {
 }
 
 // Dump implements Node.Dump.
-func (n *TableCell) Dump(source []byte, level int) {
-	gast.DumpHelper(n, source, level, nil, nil)
+func (n *TableCell) Dump(w io.Writer, source []byte, level int) {
+	gast.DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindTableCell is a NodeKind of the TableCell node.

@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	textm "github.com/yuin/goldmark/text"
@@ -56,8 +57,8 @@ type Document struct {
 var KindDocument = NewNodeKind("Document")
 
 // Dump implements Node.Dump .
-func (n *Document) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *Document) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // Type implements Node.Type .
@@ -84,8 +85,8 @@ type TextBlock struct {
 }
 
 // Dump implements Node.Dump .
-func (n *TextBlock) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *TextBlock) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindTextBlock is a NodeKind of the TextBlock node.
@@ -109,8 +110,8 @@ type Paragraph struct {
 }
 
 // Dump implements Node.Dump .
-func (n *Paragraph) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *Paragraph) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindParagraph is a NodeKind of the Paragraph node.
@@ -148,11 +149,11 @@ type Heading struct {
 }
 
 // Dump implements Node.Dump .
-func (n *Heading) Dump(source []byte, level int) {
+func (n *Heading) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{
 		"Level": fmt.Sprintf("%d", n.Level),
 	}
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindHeading is a NodeKind of the Heading node.
@@ -178,8 +179,8 @@ type ThematicBreak struct {
 }
 
 // Dump implements Node.Dump .
-func (n *ThematicBreak) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *ThematicBreak) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindThematicBreak is a NodeKind of the ThematicBreak node.
@@ -208,8 +209,8 @@ func (n *CodeBlock) IsRaw() bool {
 }
 
 // Dump implements Node.Dump .
-func (n *CodeBlock) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *CodeBlock) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindCodeBlock is a NodeKind of the CodeBlock node.
@@ -263,13 +264,13 @@ func (n *FencedCodeBlock) IsRaw() bool {
 }
 
 // Dump implements Node.Dump .
-func (n *FencedCodeBlock) Dump(source []byte, level int) {
+func (n *FencedCodeBlock) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Fence"] = string(n.Fence)
 	if n.Info != nil {
 		m["Info"] = fmt.Sprintf("\"%s\"", n.Info.Text(source))
 	}
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindFencedCodeBlock is a NodeKind of the FencedCodeBlock node.
@@ -295,8 +296,8 @@ type Blockquote struct {
 }
 
 // Dump implements Node.Dump .
-func (n *Blockquote) Dump(source []byte, level int) {
-	DumpHelper(n, source, level, nil, nil)
+func (n *Blockquote) Dump(w io.Writer, source []byte, level int) {
+	DumpHelper(w, n, source, level, nil, nil)
 }
 
 // KindBlockquote is a NodeKind of the Blockquote node.
@@ -342,7 +343,7 @@ func (l *List) CanContinue(marker byte, isOrdered bool) bool {
 }
 
 // Dump implements Node.Dump.
-func (l *List) Dump(source []byte, level int) {
+func (l *List) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{
 		"Ordered": fmt.Sprintf("%v", l.IsOrdered()),
 		"Marker":  fmt.Sprintf("%c", l.Marker),
@@ -351,7 +352,7 @@ func (l *List) Dump(source []byte, level int) {
 	if l.IsOrdered() {
 		m["Start"] = fmt.Sprintf("%d", l.Start)
 	}
-	DumpHelper(l, source, level, m, nil)
+	DumpHelper(w, l, source, level, m, nil)
 }
 
 // KindList is a NodeKind of the List node.
@@ -380,11 +381,11 @@ type ListItem struct {
 }
 
 // Dump implements Node.Dump.
-func (n *ListItem) Dump(source []byte, level int) {
+func (n *ListItem) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{
 		"Offset": fmt.Sprintf("%d", n.Offset),
 	}
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindListItem is a NodeKind of the ListItem node.
@@ -447,24 +448,24 @@ func (n *HTMLBlock) HasClosure() bool {
 }
 
 // Dump implements Node.Dump.
-func (n *HTMLBlock) Dump(source []byte, level int) {
+func (n *HTMLBlock) Dump(w io.Writer, source []byte, level int) {
 	indent := strings.Repeat("    ", level)
-	fmt.Printf("%s%s {\n", indent, "HTMLBlock")
+	fmt.Fprintf(w, "%s%s {\n", indent, "HTMLBlock")
 	indent2 := strings.Repeat("    ", level+1)
-	fmt.Printf("%sRawText: \"", indent2)
+	fmt.Fprintf(w, "%sRawText: \"", indent2)
 	for i := 0; i < n.Lines().Len(); i++ {
 		s := n.Lines().At(i)
-		fmt.Print(string(source[s.Start:s.Stop]))
+		fmt.Fprint(w, string(source[s.Start:s.Stop]))
 	}
-	fmt.Printf("\"\n")
+	fmt.Fprintf(w, "\"\n")
 	for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-		c.Dump(source, level+1)
+		c.Dump(w, source, level+1)
 	}
 	if n.HasClosure() {
 		cl := n.ClosureLine
-		fmt.Printf("%sClosure: \"%s\"\n", indent2, string(cl.Value(source)))
+		fmt.Fprintf(w, "%sClosure: \"%s\"\n", indent2, string(cl.Value(source)))
 	}
-	fmt.Printf("%s}\n", indent)
+	fmt.Fprintf(w, "%s}\n", indent)
 }
 
 // KindHTMLBlock is a NodeKind of the HTMLBlock node.
@@ -504,12 +505,12 @@ func (n *LinkReferenceDefinition) IsRaw() bool {
 }
 
 // Dump implements Node.Dump.
-func (n *LinkReferenceDefinition) Dump(source []byte, level int) {
+func (n *LinkReferenceDefinition) Dump(w io.Writer, source []byte, level int) {
 	m := map[string]string{}
 	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
-	DumpHelper(n, source, level, m, nil)
+	DumpHelper(w, n, source, level, m, nil)
 }
 
 // KindLinkReferenceDefinition is a NodeKind of the LinkReferenceDefinition node.
