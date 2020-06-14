@@ -18,12 +18,29 @@ func (p *linkReferenceParagraphTransformer) Transform(node *ast.Paragraph, reade
 	block := text.NewBlockReader(reader.Source(), lines)
 	removes := [][2]int{}
 	for {
-		start, end := parseLinkReferenceDefinition(block, pc)
+		ref, start, end := parseLinkReferenceDefinition(block)
 		if start > -1 {
 			if start == end {
 				end++
 			}
 			removes = append(removes, [2]int{start, end})
+
+			pc.AddReference(ref)
+
+			refLines := text.NewSegments()
+			refLines.AppendAll(lines.Sliced(start, end))
+
+			refNode := ast.NewLinkReferenceDefinition()
+			refNode.SetLines(refLines)
+			refNode.Label = ref.Label()
+			refNode.Destination = ref.Destination()
+			refNode.Title = ref.Title()
+
+			node.Parent().InsertBefore(node.Parent(), node, refNode)
+			if node.HasBlankPreviousLines() {
+				refNode.SetBlankPreviousLines(true)
+				node.SetBlankPreviousLines(false)
+			}
 			continue
 		}
 		break
@@ -41,31 +58,29 @@ func (p *linkReferenceParagraphTransformer) Transform(node *ast.Paragraph, reade
 	}
 
 	if lines.Len() == 0 {
-		t := ast.NewTextBlock()
-		t.SetBlankPreviousLines(node.HasBlankPreviousLines())
-		node.Parent().ReplaceChild(node.Parent(), node, t)
+		node.Parent().RemoveChild(node.Parent(), node)
 		return
 	}
 
 	node.SetLines(lines)
 }
 
-func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
+func parseLinkReferenceDefinition(block text.Reader) (Reference, int, int) {
 	block.SkipSpaces()
 	line, segment := block.PeekLine()
 	if line == nil {
-		return -1, -1
+		return nil, -1, -1
 	}
 	startLine, _ := block.Position()
 	width, pos := util.IndentWidth(line, 0)
 	if width > 3 {
-		return -1, -1
+		return nil, -1, -1
 	}
 	if width != 0 {
 		pos++
 	}
 	if line[pos] != '[' {
-		return -1, -1
+		return nil, -1, -1
 	}
 	open := segment.Start + pos + 1
 	closes := -1
@@ -73,14 +88,14 @@ func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
 	for {
 		line, segment = block.PeekLine()
 		if line == nil {
-			return -1, -1
+			return nil, -1, -1
 		}
 		closure := util.FindClosure(line, '[', ']', false, false)
 		if closure > -1 {
 			closes = segment.Start + closure
 			next := closure + 1
 			if next >= len(line) || line[next] != ':' {
-				return -1, -1
+				return nil, -1, -1
 			}
 			block.Advance(next + 1)
 			break
@@ -88,16 +103,16 @@ func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
 		block.AdvanceLine()
 	}
 	if closes < 0 {
-		return -1, -1
+		return nil, -1, -1
 	}
 	label := block.Value(text.NewSegment(open, closes))
 	if util.IsBlank(label) {
-		return -1, -1
+		return nil, -1, -1
 	}
 	block.SkipSpaces()
 	destination, ok := parseLinkDestination(block)
 	if !ok {
-		return -1, -1
+		return nil, -1, -1
 	}
 	line, segment = block.PeekLine()
 	isNewLine := line == nil || util.IsBlank(line)
@@ -107,14 +122,13 @@ func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
 	opener := block.Peek()
 	if opener != '"' && opener != '\'' && opener != '(' {
 		if !isNewLine {
-			return -1, -1
+			return nil, -1, -1
 		}
 		ref := NewReference(label, destination, nil)
-		pc.AddReference(ref)
-		return startLine, endLine + 1
+		return ref, startLine, endLine + 1
 	}
 	if spaces == 0 {
-		return -1, -1
+		return nil, -1, -1
 	}
 	block.Advance(1)
 	open = -1
@@ -126,7 +140,7 @@ func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
 	for {
 		line, segment = block.PeekLine()
 		if line == nil {
-			return -1, -1
+			return nil, -1, -1
 		}
 		if open < 0 {
 			open = segment.Start
@@ -140,24 +154,22 @@ func parseLinkReferenceDefinition(block text.Reader, pc Context) (int, int) {
 		block.AdvanceLine()
 	}
 	if closes < 0 {
-		return -1, -1
+		return nil, -1, -1
 	}
 
 	line, segment = block.PeekLine()
 	if line != nil && !util.IsBlank(line) {
 		if !isNewLine {
-			return -1, -1
+			return nil, -1, -1
 		}
 		title := block.Value(text.NewSegment(open, closes))
 		ref := NewReference(label, destination, title)
-		pc.AddReference(ref)
-		return startLine, endLine
+		return ref, startLine, endLine
 	}
 
 	title := block.Value(text.NewSegment(open, closes))
 
 	endLine, _ = block.Position()
 	ref := NewReference(label, destination, title)
-	pc.AddReference(ref)
-	return startLine, endLine + 1
+	return ref, startLine, endLine + 1
 }

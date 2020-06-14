@@ -47,6 +47,7 @@ func (b *fencedCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc Con
 	if oFenceLength < 3 {
 		return nil, NoChildren
 	}
+	fence := line[pos:i]
 	var info *ast.Text
 	if i < len(line)-1 {
 		rest := line[i:]
@@ -62,10 +63,9 @@ func (b *fencedCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc Con
 			}
 		}
 	}
-	node := ast.NewFencedCodeBlock(info)
+	node := ast.NewFencedCodeBlock(fence, info)
 	pc.Set(fencedCodeBlockInfoKey, &fenceData{fenceChar, findent, oFenceLength, node})
 	return node, NoChildren
-
 }
 
 func (b *fencedCodeBlockParser) Continue(node ast.Node, reader text.Reader, pc Context) State {

@@ -230,6 +230,10 @@ func NewCodeBlock() *CodeBlock {
 // A FencedCodeBlock struct represents a fenced code block of Markdown text.
 type FencedCodeBlock struct {
 	BaseBlock
+
+	// Fence returns the fence used for this code block.
+	Fence []byte
+
 	// Info returns a info text of this fenced code block.
 	Info *Text
 
@@ -261,6 +265,7 @@ func (n *FencedCodeBlock) IsRaw() bool {
 // Dump implements Node.Dump .
 func (n *FencedCodeBlock) Dump(source []byte, level int) {
 	m := map[string]string{}
+	m["Fence"] = string(n.Fence)
 	if n.Info != nil {
 		m["Info"] = fmt.Sprintf("\"%s\"", n.Info.Text(source))
 	}
@@ -276,9 +281,10 @@ func (n *FencedCodeBlock) Kind() NodeKind {
 }
 
 // NewFencedCodeBlock return a new FencedCodeBlock node.
-func NewFencedCodeBlock(info *Text) *FencedCodeBlock {
+func NewFencedCodeBlock(fence []byte, info *Text) *FencedCodeBlock {
 	return &FencedCodeBlock{
 		BaseBlock: BaseBlock{},
+		Fence:     fence,
 		Info:      info,
 	}
 }
@@ -478,20 +484,29 @@ func NewHTMLBlock(typ HTMLBlockType) *HTMLBlock {
 	}
 }
 
-// A LinkReferenceDefinitionBlock struct represents a link reference definition in the Markdown text.
-type LinkReferenceDefinitionBlock struct {
+// A LinkReferenceDefinition struct represents a link reference definition in the Markdown text.
+type LinkReferenceDefinition struct {
 	BaseBlock
 
-	// Destination is the destination(URL) of this link.
+	// Label is the label of this link reference definition.
+	Label []byte
+
+	// Destination is the destination(URL) of this link reference definition.
 	Destination []byte
 
-	// Title is the title of this link.
+	// Title is the title of this link reference definition.
 	Title []byte
 }
 
+// IsRaw implements Node.IsRaw.
+func (n *LinkReferenceDefinition) IsRaw() bool {
+	return true
+}
+
 // Dump implements Node.Dump.
-func (n *LinkReferenceDefinitionBlock) Dump(source []byte, level int) {
+func (n *LinkReferenceDefinition) Dump(source []byte, level int) {
 	m := map[string]string{}
+	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
 	DumpHelper(n, source, level, m, nil)
@@ -501,12 +516,12 @@ func (n *LinkReferenceDefinitionBlock) Dump(source []byte, level int) {
 var KindLinkReferenceDefinition = NewNodeKind("LinkReferenceDefinition")
 
 // Kind implements Node.Kind.
-func (n *LinkReferenceDefinitionBlock) Kind() NodeKind {
+func (n *LinkReferenceDefinition) Kind() NodeKind {
 	return KindLinkReferenceDefinition
 }
 
-// NewLinkReferenceDefinitionBlock returns a new LinkReferenceDefinition node.
-func NewLinkReferenceDefinitionBlock() *LinkReferenceDefinitionBlock {
+// NewLinkReferenceDefinition returns a new LinkReferenceDefinition node.
+func NewLinkReferenceDefinition() *LinkReferenceDefinition {
 	c := &LinkReferenceDefinition{
 		BaseBlock: BaseBlock{},
 	}

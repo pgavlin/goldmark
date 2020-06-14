@@ -18,7 +18,7 @@ func (p *emphasisDelimiterProcessor) CanOpenCloser(opener, closer *Delimiter) bo
 }
 
 func (p *emphasisDelimiterProcessor) OnMatch(consumes int) ast.Node {
-	return ast.NewEmphasis(consumes)
+	return ast.NewEmphasis(p.marker, consumes)
 }
 
 type emphasisParser struct {

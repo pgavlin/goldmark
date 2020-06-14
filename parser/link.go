@@ -174,6 +174,8 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 		}
 		link = ast.NewLink()
 		s.processLinkLabel(parent, link, last, pc)
+		link.ReferenceType = ast.LinkShortcutReference
+		link.Label = maybeReference
 		link.Title = ref.Title()
 		link.Destination = ref.Destination()
 	}
@@ -234,9 +236,11 @@ func (s *linkParser) parseReferenceLink(parent ast.Node, last *linkLabelState, b
 	}
 
 	block.Advance(endIndex + 1)
+	referenceType := ast.LinkReferenceType(ast.LinkFullReference)
 	ssegment := segment.WithStop(segment.Start + endIndex)
 	maybeReference := block.Value(ssegment)
 	if util.IsBlank(maybeReference) { // collapsed reference link
+		referenceType = ast.LinkShortcutReference
 		ssegment = text.NewSegment(last.Segment.Stop, orgpos.Start-1)
 		maybeReference = block.Value(ssegment)
 	}
@@ -248,6 +252,8 @@ func (s *linkParser) parseReferenceLink(parent ast.Node, last *linkLabelState, b
 
 	link := ast.NewLink()
 	s.processLinkLabel(parent, link, last, pc)
+	link.ReferenceType = referenceType
+	link.Label = maybeReference
 	link.Title = ref.Title()
 	link.Destination = ref.Destination()
 	return link, true

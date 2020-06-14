@@ -354,15 +354,39 @@ func (n *Emphasis) Kind() NodeKind {
 }
 
 // NewEmphasis returns a new Emphasis node with the given level.
-func NewEmphasis(level int) *Emphasis {
+func NewEmphasis(marker byte, level int) *Emphasis {
 	return &Emphasis{
 		BaseInline: BaseInline{},
+		Marker:     marker,
 		Level:      level,
 	}
 }
 
+// LinkReferenceType defines the kinds of references used by links.
+type LinkReferenceType int
+
+const (
+	// LinkNoReference indicates that a link is not a reference.
+	LinkNoReference = iota
+
+	// LinkFullReference indicates a full reference.
+	LinkFullReference
+
+	// LinkCollapsedReference indicates a collapsed reference.
+	LinkCollapsedReference
+
+	// LinkShortcutReference indicates a shortcut reference.
+	LinkShortcutReference
+)
+
 type baseLink struct {
 	BaseInline
+
+	// ReferenceType indicates what type of reference is used by this link, if any.
+	ReferenceType LinkReferenceType
+
+	// Label is the label of the reference used by this link, if any.
+	Label []byte
 
 	// Destination is a destination(URL) of this link.
 	Destination []byte
@@ -383,6 +407,8 @@ type Link struct {
 // Dump implements Node.Dump.
 func (n *Link) Dump(source []byte, level int) {
 	m := map[string]string{}
+	m["ReferenceType"] = fmt.Sprintf("%v", n.ReferenceType)
+	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
 	DumpHelper(n, source, level, m, nil)
@@ -414,6 +440,8 @@ type Image struct {
 // Dump implements Node.Dump.
 func (n *Image) Dump(source []byte, level int) {
 	m := map[string]string{}
+	m["ReferenceType"] = fmt.Sprintf("%v", n.ReferenceType)
+	m["Label"] = string(n.Label)
 	m["Destination"] = string(n.Destination)
 	m["Title"] = string(n.Title)
 	DumpHelper(n, source, level, m, nil)
@@ -434,6 +462,8 @@ func NewImage(link *Link) *Image {
 			BaseInline: BaseInline{},
 		},
 	}
+	c.ReferenceType = link.ReferenceType
+	c.Label = link.Label
 	c.Destination = link.Destination
 	c.Title = link.Title
 	for n := link.FirstChild(); n != nil; {
