@@ -161,9 +161,10 @@ func (r *renderer) Render(w io.Writer, source []byte, n ast.Node) error {
 	err := ast.Walk(n, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		s := ast.WalkStatus(ast.WalkContinue)
 		var err error
-		f := r.nodeRendererFuncs[n.Kind()]
-		if f != nil {
-			s, err = f(writer, source, n, entering)
+		if k := n.Kind(); int(k) < len(r.nodeRendererFuncs) {
+			if f := r.nodeRendererFuncs[k]; f != nil {
+				s, err = f(writer, source, n, entering)
+			}
 		}
 		return s, err
 	})

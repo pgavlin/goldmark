@@ -35,6 +35,9 @@ type Reader interface {
 	// Value returns a value of the given segment.
 	Value(Segment) []byte
 
+	// AtLineHead returns true if the reader is positioned at the head of the current line.
+	AtLineHead() bool
+
 	// LineOffset returns a distance from the line head to current position.
 	LineOffset() int
 
@@ -130,6 +133,10 @@ func (r *reader) PeekLine() ([]byte, Segment) {
 // io.RuneReader interface
 func (r *reader) ReadRune() (rune, int, error) {
 	return readRuneReader(r)
+}
+
+func (r *reader) AtLineHead() bool {
+	return r.head == r.pos.Start
 }
 
 func (r *reader) LineOffset() int {
@@ -351,6 +358,10 @@ func (r *blockReader) PrecendingCharacter() rune {
 	}
 	rn, _ := utf8.DecodeRune(r.source[i:])
 	return rn
+}
+
+func (r *blockReader) AtLineHead() bool {
+	return r.head == r.pos.Start
 }
 
 func (r *blockReader) LineOffset() int {

@@ -22,8 +22,8 @@ func (b *paragraphParser) Trigger() []byte {
 
 func (b *paragraphParser) Open(parent ast.Node, reader text.Reader, pc Context) (ast.Node, State) {
 	_, segment := reader.PeekLine()
-	segment = segment.TrimLeftSpace(reader.Source())
-	if segment.IsEmpty() {
+	trimmed := segment.TrimLeftSpace(reader.Source())
+	if trimmed.IsEmpty() {
 		return nil, NoChildren
 	}
 	node := ast.NewParagraph()
@@ -34,8 +34,8 @@ func (b *paragraphParser) Open(parent ast.Node, reader text.Reader, pc Context) 
 
 func (b *paragraphParser) Continue(node ast.Node, reader text.Reader, pc Context) State {
 	_, segment := reader.PeekLine()
-	segment = segment.TrimLeftSpace(reader.Source())
-	if segment.IsEmpty() {
+	trimmed := segment.TrimLeftSpace(reader.Source())
+	if trimmed.IsEmpty() {
 		return Close
 	}
 	node.Lines().Append(segment)

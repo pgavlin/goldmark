@@ -581,3 +581,39 @@ func NewRawHTML() *RawHTML {
 		Segments: textm.NewSegments(),
 	}
 }
+
+// Whitespace represents leading whitespace for lines inside a Markdown paragraph.
+type Whitespace struct {
+	BaseInline
+
+	// Segment is the position of the whitespace in the source text.
+	Segment textm.Segment
+}
+
+// Inline implements Inline.Inline.
+func (n *Whitespace) Inline() {}
+
+// Text implements Node.Text.
+func (n *Whitespace) Text(source []byte) []byte {
+	return n.Segment.Value(source)
+}
+
+// Dump implements Node.Dump.
+func (n *Whitespace) Dump(w io.Writer, source []byte, level int) {
+	fmt.Fprintf(w, "%sWhitespace: \"%s\"\n", strings.Repeat("    ", level), string(n.Text(source)))
+}
+
+// KindWhitespace is a NodeKind of the Whitespace node.
+var KindWhitespace = NewNodeKind("Whitespace")
+
+// Kind implements Node.Kind.
+func (n *Whitespace) Kind() NodeKind {
+	return KindWhitespace
+}
+
+// NewWhitespace returns a new Whitespace node.
+func NewWhitespace(v textm.Segment) *Whitespace {
+	return &Whitespace{
+		Segment: v,
+	}
+}

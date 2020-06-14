@@ -1116,6 +1116,18 @@ func (p *parser) parseBlock(block text.BlockReader, parent ast.Node, pc Context)
 		if line == nil {
 			break
 		}
+
+		if block.AtLineHead() {
+			firstNonSpace := util.FirstNonSpacePosition(line)
+			if firstNonSpace != 0 {
+				_, startPos := block.Position()
+				block.Advance(firstNonSpace)
+				_, endPos := block.Position()
+				parent.AppendChild(parent, ast.NewWhitespace(startPos.Between(endPos)))
+				line = line[firstNonSpace:]
+			}
+		}
+
 		lineLength := len(line)
 		hardlineBreak := false
 		softLinebreak := line[lineLength-1] == '\n'
