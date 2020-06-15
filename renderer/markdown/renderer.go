@@ -441,6 +441,7 @@ func (r *Renderer) RenderList(w util.BufWriter, source []byte, node ast.Node, en
 			index:   list.Start,
 		})
 	} else {
+		r.listStack = r.listStack[:len(r.listStack)-1]
 		if err := r.CloseBlock(w); err != nil {
 			return ast.WalkStop, err
 		}
