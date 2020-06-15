@@ -903,7 +903,8 @@ func (p *parser) openBlocks(parent ast.Node, blankLine bool, reader text.Reader,
 	}
 retry:
 	var bps []BlockParser
-	line, _ := reader.PeekLine()
+	line, segment := reader.PeekLine()
+	_, startPosition := reader.Position()
 	w, pos := util.IndentWidth(line, reader.LineOffset())
 	if w >= len(line) {
 		pc.SetBlockOffset(-1)
@@ -965,6 +966,14 @@ retry:
 					}
 				}
 			}
+
+			// Capture any leading whitespace.
+			if pos != 0 {
+				if _, currentPosition := reader.Position(); currentPosition != startPosition {
+					node.SetLeadingWhitespace(text.NewSegment(segment.Start, segment.Start+pos))
+				}
+			}
+
 			node.SetBlankPreviousLines(blankLine)
 			if last != nil && last.Parent() == nil {
 				lastPos := len(pc.OpenedBlocks()) - 1

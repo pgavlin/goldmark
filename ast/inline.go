@@ -34,6 +34,16 @@ func (b *BaseInline) SetBlankPreviousLines(v bool) {
 	panic("can not call with inline nodes.")
 }
 
+// LeadingWhitespace implements Node.LeadingWhitespace.
+func (b *BaseInline) LeadingWhitespace() textm.Segment {
+	panic("can not call with inline nodes.")
+}
+
+// SetLeadingWhitespace implements Node.SetLeadingWhitespace.
+func (b *BaseInline) SetLeadingWhitespace(v textm.Segment) {
+	panic("can not call with inline nodes.")
+}
+
 // Lines implements Node.Lines
 func (b *BaseInline) Lines() *textm.Segments {
 	panic("can not call with inline nodes.")
@@ -289,6 +299,9 @@ func NewString(v []byte) *String {
 // A CodeSpan struct represents a code span of Markdown text.
 type CodeSpan struct {
 	BaseInline
+
+	// Backticks is the number of backticks used to open and close this code span.
+	Backticks int
 }
 
 // Inline implements Inline.Inline .
@@ -320,9 +333,10 @@ func (n *CodeSpan) Kind() NodeKind {
 }
 
 // NewCodeSpan returns a new CodeSpan node.
-func NewCodeSpan() *CodeSpan {
+func NewCodeSpan(backticks int) *CodeSpan {
 	return &CodeSpan{
 		BaseInline: BaseInline{},
+		Backticks:  backticks,
 	}
 }
 

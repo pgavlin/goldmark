@@ -135,6 +135,14 @@ type Node interface {
 	// This method is valid only for block nodes.
 	SetBlankPreviousLines(v bool)
 
+	// LeadingWhitespace returns the leading whitespace for this node, if any.
+	// This method is valid only for block nodes.
+	LeadingWhitespace() textm.Segment
+
+	// SetLeadingWhitespace sets the leading whitespace for this node.
+	// This method is valid only for block nodes.
+	SetLeadingWhitespace(v textm.Segment)
+
 	// Lines returns text segments that hold positions in a source.
 	// This method is valid only for block nodes.
 	Lines() *textm.Segments
@@ -433,6 +441,9 @@ func DumpHelper(w io.Writer, v Node, source []byte, level int, kv map[string]str
 		}
 		fmt.Fprintf(w, "\"\n")
 		fmt.Fprintf(w, "%sHasBlankPreviousLines: %v\n", indent2, v.HasBlankPreviousLines())
+
+		leadingWhitespace := v.LeadingWhitespace()
+		fmt.Fprintf(w, "%sLeadingWhitespace: %q\n", indent2, leadingWhitespace.Value(source))
 	}
 	for name, value := range kv {
 		fmt.Fprintf(w, "%s%s: %s\n", indent2, name, value)

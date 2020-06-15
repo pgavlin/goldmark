@@ -12,6 +12,7 @@ import (
 type BaseBlock struct {
 	BaseNode
 	blankPreviousLines bool
+	leadingWhitespace  textm.Segment
 	lines              *textm.Segments
 }
 
@@ -33,6 +34,16 @@ func (b *BaseBlock) HasBlankPreviousLines() bool {
 // SetBlankPreviousLines implements Node.SetBlankPreviousLines.
 func (b *BaseBlock) SetBlankPreviousLines(v bool) {
 	b.blankPreviousLines = v
+}
+
+// LeadingWhitespace returns the leading whitespace for this block, if any.
+func (b *BaseBlock) LeadingWhitespace() textm.Segment {
+	return b.leadingWhitespace
+}
+
+// SetLeadingWhitespace sets the leading whitespace for this block.
+func (b *BaseBlock) SetLeadingWhitespace(v textm.Segment) {
+	b.leadingWhitespace = v
 }
 
 // Lines implements Node.Lines
@@ -219,6 +230,17 @@ var KindCodeBlock = NewNodeKind("CodeBlock")
 // Kind implements Node.Kind.
 func (n *CodeBlock) Kind() NodeKind {
 	return KindCodeBlock
+}
+
+// SetLeadingWhitespace implements Node.SetLeadingWhitespace.
+func (n *CodeBlock) SetLeadingWhitespace(v textm.Segment) {
+	// A code block eats the first four spaces of its leading whitespace.
+	if v.Start-v.Stop >= 4 {
+		v = v.WithStop(v.Stop - 4)
+	} else {
+		v = v.WithStop(v.Start)
+	}
+	n.BaseBlock.SetLeadingWhitespace(v)
 }
 
 // NewCodeBlock returns a new CodeBlock node.
@@ -474,6 +496,11 @@ var KindHTMLBlock = NewNodeKind("HTMLBlock")
 // Kind implements Node.Kind.
 func (n *HTMLBlock) Kind() NodeKind {
 	return KindHTMLBlock
+}
+
+// SetLeadingWhitespace implements Node.SetLeadingWhitespace.
+func (n *HTMLBlock) SetLeadingWhitespace(v textm.Segment) {
+	// Leading whitespace is already part of an HTML block.
 }
 
 // NewHTMLBlock returns a new HTMLBlock node.
