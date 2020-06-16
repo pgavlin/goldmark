@@ -1,7 +1,7 @@
 package ast
 
 import (
-	gast "github.com/yuin/goldmark/ast"
+	gast "github.com/pgavlin/goldmark/ast"
 	"io"
 )
 

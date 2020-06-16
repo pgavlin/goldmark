@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	gast "github.com/yuin/goldmark/ast"
+	gast "github.com/pgavlin/goldmark/ast"
 	"io"
 	"strings"
 )

@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/yuin/goldmark"
-	gast "github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/extension/ast"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer"
-	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
+	"github.com/pgavlin/goldmark"
+	gast "github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/extension/ast"
+	"github.com/pgavlin/goldmark/parser"
+	"github.com/pgavlin/goldmark/renderer"
+	"github.com/pgavlin/goldmark/renderer/html"
+	"github.com/pgavlin/goldmark/text"
+	"github.com/pgavlin/goldmark/util"
 )
 
 var tableDelimRegexp = regexp.MustCompile(`^[\s\-\|\:]+$`)

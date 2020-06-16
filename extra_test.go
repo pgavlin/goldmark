@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"testing"
 
-	. "github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/testutil"
+	. "github.com/pgavlin/goldmark"
+	"github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/parser"
+	"github.com/pgavlin/goldmark/renderer/html"
+	"github.com/pgavlin/goldmark/testutil"
 )
 
 func TestExtras(t *testing.T) {

@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/util"
+	"github.com/pgavlin/goldmark"
+	"github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/util"
 )
 
 // TestingT is a subset of the functionality provided by testing.T.

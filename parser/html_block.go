@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
+	"github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/text"
+	"github.com/pgavlin/goldmark/util"
 )
 
 var allowedBlockTags = map[string]bool{

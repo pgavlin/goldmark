@@ -1,4 +1,4 @@
-module github.com/yuin/goldmark
+module github.com/pgavlin/goldmark
 
 go 1.13
 

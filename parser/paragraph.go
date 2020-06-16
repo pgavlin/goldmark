@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/text"
+	"github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/text"
 )
 
 type paragraphParser struct {

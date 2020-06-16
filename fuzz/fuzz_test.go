@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/util"
+	"github.com/pgavlin/goldmark"
+	"github.com/pgavlin/goldmark/extension"
+	"github.com/pgavlin/goldmark/parser"
+	"github.com/pgavlin/goldmark/renderer/html"
+	"github.com/pgavlin/goldmark/util"
 )
 
 var _ = fmt.Printf

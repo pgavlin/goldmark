@@ -8,10 +8,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/renderer"
-	"github.com/yuin/goldmark/text"
-	"github.com/yuin/goldmark/util"
+	"github.com/pgavlin/goldmark/ast"
+	"github.com/pgavlin/goldmark/renderer"
+	"github.com/pgavlin/goldmark/text"
+	"github.com/pgavlin/goldmark/util"
 )
 
 type blockState struct {
