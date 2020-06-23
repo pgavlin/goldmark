@@ -1,10 +1,10 @@
 goldmark
 ==========================================
 
-[![http://godoc.org/github.com/yuin/goldmark](https://godoc.org/github.com/yuin/goldmark?status.svg)](http://godoc.org/github.com/yuin/goldmark)
-[![https://github.com/yuin/goldmark/actions?query=workflow:test](https://github.com/yuin/goldmark/workflows/test/badge.svg?branch=master&event=push)](https://github.com/yuin/goldmark/actions?query=workflow:test)
-[![https://coveralls.io/github/yuin/goldmark](https://coveralls.io/repos/github/yuin/goldmark/badge.svg?branch=master)](https://coveralls.io/github/yuin/goldmark)
-[![https://goreportcard.com/report/github.com/yuin/goldmark](https://goreportcard.com/badge/github.com/yuin/goldmark)](https://goreportcard.com/report/github.com/yuin/goldmark)
+[![http://godoc.org/github.com/pgavlin/goldmark](https://godoc.org/github.com/pgavlin/goldmark?status.svg)](http://godoc.org/github.com/pgavlin/goldmark)
+[![https://github.com/pgavlin/goldmark/actions?query=workflow:test](https://github.com/pgavlin/goldmark/workflows/test/badge.svg?branch=master&event=push)](https://github.com/pgavlin/goldmark/actions?query=workflow:test)
+[![https://coveralls.io/github/pgavlin/goldmark](https://coveralls.io/repos/github/pgavlin/goldmark/badge.svg?branch=master)](https://coveralls.io/github/pgavlin/goldmark)
+[![https://goreportcard.com/report/github.com/pgavlin/goldmark](https://goreportcard.com/badge/github.com/pgavlin/goldmark)](https://goreportcard.com/report/github.com/pgavlin/goldmark)
 
 > A Markdown parser written in Go. Easy to extend, standards-compliant, well-structured.
 
@@ -54,7 +54,7 @@ Features
 Installation
 ----------------------
 ```bash
-$ go get github.com/yuin/goldmark
+$ go get github.com/pgavlin/goldmark
 ```
 
 
@@ -65,7 +65,7 @@ Import packages:
 ```go
 import (
     "bytes"
-    "github.com/yuin/goldmark"
+    "github.com/pgavlin/goldmark"
 )
 ```
 
@@ -106,10 +106,10 @@ Custom parser and renderer
 ```go
 import (
     "bytes"
-    "github.com/yuin/goldmark"
-    "github.com/yuin/goldmark/extension"
-    "github.com/yuin/goldmark/parser"
-    "github.com/yuin/goldmark/renderer/html"
+    "github.com/pgavlin/goldmark"
+    "github.com/pgavlin/goldmark/extension"
+    "github.com/pgavlin/goldmark/parser"
+    "github.com/pgavlin/goldmark/renderer/html"
 )
 
 md := goldmark.New(
