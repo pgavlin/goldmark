@@ -162,6 +162,11 @@ func (r *Renderer) WriteString(w io.Writer, s string) (int, error) {
 	return r.Write(w, []byte(s))
 }
 
+// Prefix returns the prefix for the current line, if any.
+func (r *Renderer) Prefix() string {
+	return string(r.prefix)
+}
+
 // PushIndent adds the specified amount of indentation to the current line prefix.
 func (r *Renderer) PushIndent(amount int) {
 	r.PushPrefix(strings.Repeat(" ", amount))
