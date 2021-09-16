@@ -51,6 +51,8 @@ func (b *tableParagraphTransformer) Transform(node *gast.Paragraph, reader text.
 	for i := 2; i < lines.Len(); i++ {
 		table.AppendChild(table, b.parseRow(lines.At(i), alignments, false, reader))
 	}
+	table.SetBlankPreviousLines(node.HasBlankPreviousLines())
+	table.SetLeadingWhitespace(node.LeadingWhitespace())
 	node.Parent().InsertBefore(node.Parent(), node, table)
 	node.Parent().RemoveChild(node.Parent(), node)
 }
