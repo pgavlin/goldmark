@@ -621,12 +621,48 @@ func (r *Renderer) RenderCodeSpan(w util.BufWriter, source []byte, node ast.Node
 		return ast.WalkContinue, nil
 	}
 
-	// TODO:
-	// - case 330, 331, single space stripping -> contents need an additional leading and trailing space
-	// - case 339, backtick inside text -> start/end need additional backtick
-
 	code := node.(*ast.CodeSpan)
 	delimiter := bytes.Repeat([]byte{'`'}, code.Backticks)
+
+	// Detect boundary newline trimming: the parser creates empty first/last
+	// children when it trims newlines at code span boundaries. In this case,
+	// render with newlines around the content to preserve the structure.
+	// When trimming occurs, both boundaries are trimmed (the spec requires
+	// both first and last to be space/newline), so we emit newlines on both
+	// sides to ensure the re-parsed result matches.
+	firstChild := node.FirstChild()
+	lastChild := node.LastChild()
+	emptyFirst := firstChild != nil && firstChild.(*ast.Text).Segment.IsEmpty()
+	emptyLast := lastChild != nil && lastChild != firstChild && lastChild.(*ast.Text).Segment.IsEmpty()
+
+	if emptyFirst || emptyLast {
+		if _, err := r.Write(w, delimiter); err != nil {
+			return ast.WalkStop, err
+		}
+		if err := r.WriteByte(w, '\n'); err != nil {
+			return ast.WalkStop, err
+		}
+		for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+			if c == firstChild && emptyFirst {
+				continue
+			}
+			if c == lastChild && emptyLast {
+				break
+			}
+			text := c.(*ast.Text).Segment
+			if _, err := r.Write(w, text.Value(source)); err != nil {
+				return ast.WalkStop, err
+			}
+		}
+		if err := r.WriteByte(w, '\n'); err != nil {
+			return ast.WalkStop, err
+		}
+		if _, err := r.Write(w, delimiter); err != nil {
+			return ast.WalkStop, err
+		}
+		return ast.WalkSkipChildren, nil
+	}
+
 	pad := r.shouldPadCodeSpan(source, code)
 
 	if _, err := r.Write(w, delimiter); err != nil {
