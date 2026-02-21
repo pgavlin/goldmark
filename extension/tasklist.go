@@ -1,6 +1,8 @@
 package extension
 
 import (
+	"regexp"
+
 	"github.com/pgavlin/goldmark"
 	gast "github.com/pgavlin/goldmark/ast"
 	"github.com/pgavlin/goldmark/extension/ast"
@@ -9,7 +11,6 @@ import (
 	"github.com/pgavlin/goldmark/renderer/html"
 	"github.com/pgavlin/goldmark/text"
 	"github.com/pgavlin/goldmark/util"
-	"regexp"
 )
 
 var taskListRegexp = regexp.MustCompile(`^\[([\sxX])\]\s*`)
@@ -40,6 +41,9 @@ func (s *taskCheckBoxParser) Parse(parent gast.Node, block text.Reader, pc parse
 		return nil
 	}
 
+	if parent.HasChildren() {
+		return nil
+	}
 	if _, ok := parent.Parent().(*gast.ListItem); !ok {
 		return nil
 	}
@@ -80,21 +84,22 @@ func (r *TaskCheckBoxHTMLRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRe
 	reg.Register(ast.KindTaskCheckBox, r.renderTaskCheckBox)
 }
 
-func (r *TaskCheckBoxHTMLRenderer) renderTaskCheckBox(w util.BufWriter, source []byte, node gast.Node, entering bool) (gast.WalkStatus, error) {
+func (r *TaskCheckBoxHTMLRenderer) renderTaskCheckBox(
+	w util.BufWriter, source []byte, node gast.Node, entering bool) (gast.WalkStatus, error) {
 	if !entering {
 		return gast.WalkContinue, nil
 	}
 	n := node.(*ast.TaskCheckBox)
 
 	if n.IsChecked {
-		w.WriteString(`<input checked="" disabled="" type="checkbox"`)
+		_, _ = w.WriteString(`<input checked="" disabled="" type="checkbox"`)
 	} else {
-		w.WriteString(`<input disabled="" type="checkbox"`)
+		_, _ = w.WriteString(`<input disabled="" type="checkbox"`)
 	}
 	if r.XHTML {
-		w.WriteString(" /> ")
+		_, _ = w.WriteString(" /> ")
 	} else {
-		w.WriteString("> ")
+		_, _ = w.WriteString("> ")
 	}
 	return gast.WalkContinue, nil
 }

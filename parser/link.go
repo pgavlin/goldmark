@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
 
 	"github.com/pgavlin/goldmark/ast"
@@ -48,6 +47,13 @@ var kindLinkLabelState = ast.NewNodeKind("LinkLabelState")
 
 func (s *linkLabelState) Kind() ast.NodeKind {
 	return kindLinkLabelState
+}
+
+func linkLabelStateLength(v *linkLabelState) int {
+	if v == nil || v.Last == nil || v.First == nil {
+		return 0
+	}
+	return v.Last.Segment.Stop - v.First.Segment.Start
 }
 
 func pushLinkLabelState(pc Context, v *linkLabelState) {
@@ -114,8 +120,6 @@ func (s *linkParser) Trigger() []byte {
 	return []byte{'!', '[', ']'}
 }
 
-var linkDestinationRegexp = regexp.MustCompile(`\s*([^\s].+)`)
-var linkTitleRegexp = regexp.MustCompile(`\s+(\)|["'\(].+)`)
 var linkBottom = NewContextKey()
 
 func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.Node {
@@ -123,13 +127,13 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 	if line[0] == '!' {
 		if len(line) > 1 && line[1] == '[' {
 			block.Advance(1)
-			pc.Set(linkBottom, pc.LastDelimiter())
+			pushLinkBottom(pc)
 			return processLinkLabelOpen(block, segment.Start+1, true, pc)
 		}
 		return nil
 	}
 	if line[0] == '[' {
-		pc.Set(linkBottom, pc.LastDelimiter())
+		pushLinkBottom(pc)
 		return processLinkLabelOpen(block, segment.Start, false, pc)
 	}
 
@@ -140,12 +144,22 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 	}
 	last := tlist.(*linkLabelState).Last
 	if last == nil {
+		_ = popLinkBottom(pc)
 		return nil
 	}
 	block.Advance(1)
 	removeLinkLabelState(pc, last)
-	if s.containsLink(last) { // a link in a link text is not allowed
+	// CommonMark spec says:
+	//  > A link label can have at most 999 characters inside the square brackets.
+	if linkLabelStateLength(tlist.(*linkLabelState)) > 998 {
 		ast.MergeOrReplaceTextSegment(last.Parent(), last, last.Segment)
+		_ = popLinkBottom(pc)
+		return nil
+	}
+
+	if !last.IsImage && s.containsLink(last) { // a link in a link text is not allowed
+		ast.MergeOrReplaceTextSegment(last.Parent(), last, last.Segment)
+		_ = popLinkBottom(pc)
 		return nil
 	}
 
@@ -159,6 +173,7 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 		link, hasValue = s.parseReferenceLink(parent, last, block, pc)
 		if link == nil && hasValue {
 			ast.MergeOrReplaceTextSegment(last.Parent(), last, last.Segment)
+			_ = popLinkBottom(pc)
 			return nil
 		}
 	}
@@ -168,9 +183,18 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 		block.SetPosition(l, pos)
 		ssegment := text.NewSegment(last.Segment.Stop, segment.Start)
 		maybeReference := block.Value(ssegment)
+		// CommonMark spec says:
+		//  > A link label can have at most 999 characters inside the square brackets.
+		if len(maybeReference) > 999 {
+			ast.MergeOrReplaceTextSegment(last.Parent(), last, last.Segment)
+			_ = popLinkBottom(pc)
+			return nil
+		}
+
 		ref, ok := pc.Reference(util.ToLinkReference(maybeReference))
 		if !ok {
 			ast.MergeOrReplaceTextSegment(last.Parent(), last, last.Segment)
+			_ = popLinkBottom(pc)
 			return nil
 		}
 		link = ast.NewLink()
@@ -188,13 +212,15 @@ func (s *linkParser) Parse(parent ast.Node, block text.Reader, pc Context) ast.N
 	return link
 }
 
-func (s *linkParser) containsLink(last *linkLabelState) bool {
-	if last.IsImage {
+func (s *linkParser) containsLink(n ast.Node) bool {
+	if n == nil {
 		return false
 	}
-	var c ast.Node
-	for c = last; c != nil; c = c.NextSibling() {
+	for c := n; c != nil; c = c.NextSibling() {
 		if _, ok := c.(*ast.Link); ok {
+			return true
+		}
+		if s.containsLink(c.FirstChild()) {
 			return true
 		}
 	}
@@ -213,11 +239,7 @@ func processLinkLabelOpen(block text.Reader, pos int, isImage bool, pc Context) 
 }
 
 func (s *linkParser) processLinkLabel(parent ast.Node, link *ast.Link, last *linkLabelState, pc Context) {
-	var bottom ast.Node
-	if v := pc.Get(linkBottom); v != nil {
-		bottom = v.(ast.Node)
-	}
-	pc.Set(linkBottom, nil)
+	bottom := popLinkBottom(pc)
 	ProcessDelimiters(bottom, pc)
 	for c := last.NextSibling(); c != nil; {
 		next := c.NextSibling()
@@ -227,23 +249,41 @@ func (s *linkParser) processLinkLabel(parent ast.Node, link *ast.Link, last *lin
 	}
 }
 
-func (s *linkParser) parseReferenceLink(parent ast.Node, last *linkLabelState, block text.Reader, pc Context) (*ast.Link, bool) {
+var linkFindClosureOptions text.FindClosureOptions = text.FindClosureOptions{
+	Nesting: false,
+	Newline: true,
+	Advance: true,
+}
+
+func (s *linkParser) parseReferenceLink(parent ast.Node, last *linkLabelState,
+	block text.Reader, pc Context) (*ast.Link, bool) {
 	_, orgpos := block.Position()
 	block.Advance(1) // skip '['
-	line, segment := block.PeekLine()
-	endIndex := util.FindClosure(line, '[', ']', false, true)
-	if endIndex < 0 {
+	segments, found := block.FindClosure('[', ']', linkFindClosureOptions)
+	if !found {
 		return nil, false
 	}
 
-	block.Advance(endIndex + 1)
 	referenceType := ast.LinkReferenceType(ast.LinkFullReference)
-	ssegment := segment.WithStop(segment.Start + endIndex)
-	maybeReference := block.Value(ssegment)
+	var maybeReference []byte
+	if segments.Len() == 1 { // avoid allocate a new byte slice
+		maybeReference = block.Value(segments.At(0))
+	} else {
+		maybeReference = []byte{}
+		for i := 0; i < segments.Len(); i++ {
+			s := segments.At(i)
+			maybeReference = append(maybeReference, block.Value(s)...)
+		}
+	}
 	if util.IsBlank(maybeReference) { // collapsed reference link
-		referenceType = ast.LinkShortcutReference
-		ssegment = text.NewSegment(last.Segment.Stop, orgpos.Start-1)
-		maybeReference = block.Value(ssegment)
+		referenceType = ast.LinkCollapsedReference
+		s := text.NewSegment(last.Segment.Stop, orgpos.Start-1)
+		maybeReference = block.Value(s)
+	}
+	// CommonMark spec says:
+	//  > A link label can have at most 999 characters inside the square brackets.
+	if len(maybeReference) > 999 {
+		return nil, true
 	}
 
 	ref, ok := pc.Reference(util.ToLinkReference(maybeReference))
@@ -300,20 +340,17 @@ func (s *linkParser) parseLink(parent ast.Node, last *linkLabelState, block text
 func parseLinkDestination(block text.Reader) ([]byte, bool) {
 	block.SkipSpaces()
 	line, _ := block.PeekLine()
-	buf := []byte{}
 	if block.Peek() == '<' {
 		i := 1
 		for i < len(line) {
 			c := line[i]
 			if c == '\\' && i < len(line)-1 && util.IsPunct(line[i+1]) {
-				buf = append(buf, '\\', line[i+1])
 				i += 2
 				continue
 			} else if c == '>' {
 				block.Advance(i + 1)
 				return line[1:i], true
 			}
-			buf = append(buf, c)
 			i++
 		}
 		return nil, false
@@ -323,7 +360,6 @@ func parseLinkDestination(block text.Reader) ([]byte, bool) {
 	for i < len(line) {
 		c := line[i]
 		if c == '\\' && i < len(line)-1 && util.IsPunct(line[i+1]) {
-			buf = append(buf, '\\', line[i+1])
 			i += 2
 			continue
 		} else if c == '(' {
@@ -336,7 +372,6 @@ func parseLinkDestination(block text.Reader) ([]byte, bool) {
 		} else if util.IsSpace(c) {
 			break
 		}
-		buf = append(buf, c)
 		i++
 	}
 	block.Advance(i)
@@ -353,34 +388,61 @@ func parseLinkTitle(block text.Reader) ([]byte, bool) {
 	if opener == '(' {
 		closer = ')'
 	}
-	savedLine, savedPosition := block.Position()
-	var title []byte
-	for i := 0; ; i++ {
-		line, _ := block.PeekLine()
-		if line == nil {
-			block.SetPosition(savedLine, savedPosition)
-			return nil, false
+	block.Advance(1)
+	segments, found := block.FindClosure(opener, closer, linkFindClosureOptions)
+	if found {
+		if segments.Len() == 1 {
+			return block.Value(segments.At(0)), true
 		}
-		offset := 0
-		if i == 0 {
-			offset = 1
+		var title []byte
+		for i := 0; i < segments.Len(); i++ {
+			s := segments.At(i)
+			title = append(title, block.Value(s)...)
 		}
-		pos := util.FindClosure(line[offset:], opener, closer, false, true)
-		if pos < 0 {
-			title = append(title, line[offset:]...)
-			block.AdvanceLine()
-			continue
-		}
-		pos += offset + 1 // 1: closer
-		block.Advance(pos)
-		if i == 0 { // avoid allocating new slice
-			return line[offset : pos-1], true
-		}
-		return append(title, line[offset:pos-1]...), true
+		return title, true
 	}
+	return nil, false
+}
+
+func pushLinkBottom(pc Context) {
+	bottoms := pc.Get(linkBottom)
+	b := pc.LastDelimiter()
+	if bottoms == nil {
+		pc.Set(linkBottom, b)
+		return
+	}
+	if s, ok := bottoms.([]ast.Node); ok {
+		pc.Set(linkBottom, append(s, b))
+		return
+	}
+	pc.Set(linkBottom, []ast.Node{bottoms.(ast.Node), b})
+}
+
+func popLinkBottom(pc Context) ast.Node {
+	bottoms := pc.Get(linkBottom)
+	if bottoms == nil {
+		return nil
+	}
+	if v, ok := bottoms.(ast.Node); ok {
+		pc.Set(linkBottom, nil)
+		return v
+	}
+	s := bottoms.([]ast.Node)
+	v := s[len(s)-1]
+	n := s[0 : len(s)-1]
+	switch len(n) {
+	case 0:
+		pc.Set(linkBottom, nil)
+	case 1:
+		pc.Set(linkBottom, n[0])
+	default:
+		pc.Set(linkBottom, s[0:len(s)-1])
+	}
+	return v
 }
 
 func (s *linkParser) CloseBlock(parent ast.Node, block text.Reader, pc Context) {
+	pc.Set(linkBottom, nil)
 	tlist := pc.Get(linkLabelStateKey)
 	if tlist == nil {
 		return

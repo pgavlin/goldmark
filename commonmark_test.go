@@ -2,7 +2,7 @@ package goldmark_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	. "github.com/pgavlin/goldmark"
@@ -20,7 +20,7 @@ type commonmarkSpecTestCase struct {
 }
 
 func TestSpec(t *testing.T) {
-	bs, err := ioutil.ReadFile("_test/spec.json")
+	bs, err := os.ReadFile("_test/spec.json")
 	if err != nil {
 		panic(err)
 	}
@@ -29,12 +29,25 @@ func TestSpec(t *testing.T) {
 		panic(err)
 	}
 	cases := []testutil.MarkdownTestCase{}
+	nos := testutil.ParseCliCaseArg()
 	for _, c := range testCases {
-		cases = append(cases, testutil.MarkdownTestCase{
-			No:       c.Example,
-			Markdown: c.Markdown,
-			Expected: c.HTML,
-		})
+		shouldAdd := len(nos) == 0
+		if !shouldAdd {
+			for _, no := range nos {
+				if c.Example == no {
+					shouldAdd = true
+					break
+				}
+			}
+		}
+
+		if shouldAdd {
+			cases = append(cases, testutil.MarkdownTestCase{
+				No:       c.Example,
+				Markdown: c.Markdown,
+				Expected: c.HTML,
+			})
+		}
 	}
 	markdown := New(WithRendererOptions(
 		html.WithXHTML(),

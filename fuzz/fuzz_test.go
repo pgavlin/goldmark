@@ -2,8 +2,8 @@ package fuzz
 
 import (
 	"bytes"
-	"fmt"
-	"io/ioutil"
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/pgavlin/goldmark"
@@ -13,38 +13,45 @@ import (
 	"github.com/pgavlin/goldmark/util"
 )
 
-var _ = fmt.Printf
+func fuzz(f *testing.F) {
+	f.Fuzz(func(t *testing.T, orig string) {
+		markdown := goldmark.New(
+			goldmark.WithParserOptions(
+				parser.WithAutoHeadingID(),
+				parser.WithAttribute(),
+			),
+			goldmark.WithRendererOptions(
+				html.WithUnsafe(),
+				html.WithXHTML(),
+			),
+			goldmark.WithExtensions(
+				extension.DefinitionList,
+				extension.Footnote,
+				extension.GFM,
+				extension.Typographer,
+				extension.Linkify,
+				extension.Table,
+				extension.TaskList,
+			),
+		)
+		var b bytes.Buffer
+		if err := markdown.Convert(util.StringToReadOnlyBytes(orig), &b); err != nil {
+			panic(err)
+		}
+	})
+}
 
-func TestFuzz(t *testing.T) {
-	crasher := "6dff3d03167cb144d4e2891edac76ee740a77bc7"
-	data, err := ioutil.ReadFile("crashers/" + crasher)
+func FuzzDefault(f *testing.F) {
+	bs, err := os.ReadFile("../_test/spec.json")
 	if err != nil {
-		return
-	}
-	fmt.Printf("%s\n", util.VisualizeSpaces(data))
-	fmt.Println("||||||||||||||||||||||")
-	markdown := goldmark.New(
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
-			parser.WithAttribute(),
-		),
-		goldmark.WithRendererOptions(
-			html.WithUnsafe(),
-			html.WithXHTML(),
-		),
-		goldmark.WithExtensions(
-			extension.DefinitionList,
-			extension.Footnote,
-			extension.GFM,
-			extension.Typographer,
-			extension.Linkify,
-			extension.Table,
-			extension.TaskList,
-		),
-	)
-	var b bytes.Buffer
-	if err := markdown.Convert(data, &b); err != nil {
 		panic(err)
 	}
-	fmt.Println(b.String())
+	var testCases []map[string]interface{}
+	if err := json.Unmarshal(bs, &testCases); err != nil {
+		panic(err)
+	}
+	for _, c := range testCases {
+		f.Add(c["markdown"])
+	}
+	fuzz(f)
 }

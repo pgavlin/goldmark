@@ -8,20 +8,20 @@ import (
 	textm "github.com/pgavlin/goldmark/text"
 )
 
-// A BaseBlock struct implements the Node interface.
+// A BaseBlock struct implements the Node interface partialliy.
 type BaseBlock struct {
 	BaseNode
+	lines              textm.Segments
 	blankPreviousLines bool
 	leadingWhitespace  textm.Segment
-	lines              *textm.Segments
 }
 
-// Type implements Node.Type
+// Type implements Node.Type.
 func (b *BaseBlock) Type() NodeType {
 	return TypeBlock
 }
 
-// IsRaw implements Node.IsRaw
+// IsRaw implements Node.IsRaw.
 func (b *BaseBlock) IsRaw() bool {
 	return false
 }
@@ -46,22 +46,21 @@ func (b *BaseBlock) SetLeadingWhitespace(v textm.Segment) {
 	b.leadingWhitespace = v
 }
 
-// Lines implements Node.Lines
+// Lines implements Node.Lines.
 func (b *BaseBlock) Lines() *textm.Segments {
-	if b.lines == nil {
-		b.lines = textm.NewSegments()
-	}
-	return b.lines
+	return &b.lines
 }
 
-// SetLines implements Node.SetLines
+// SetLines implements Node.SetLines.
 func (b *BaseBlock) SetLines(v *textm.Segments) {
-	b.lines = v
+	b.lines = *v
 }
 
 // A Document struct is a root node of Markdown text.
 type Document struct {
 	BaseBlock
+
+	meta map[string]interface{}
 }
 
 // KindDocument is a NodeKind of the Document node.
@@ -82,10 +81,42 @@ func (n *Document) Kind() NodeKind {
 	return KindDocument
 }
 
+// OwnerDocument implements Node.OwnerDocument.
+func (n *Document) OwnerDocument() *Document {
+	return n
+}
+
+// Meta returns metadata of this document.
+func (n *Document) Meta() map[string]interface{} {
+	if n.meta == nil {
+		n.meta = map[string]interface{}{}
+	}
+	return n.meta
+}
+
+// SetMeta sets given metadata to this document.
+func (n *Document) SetMeta(meta map[string]interface{}) {
+	if n.meta == nil {
+		n.meta = map[string]interface{}{}
+	}
+	for k, v := range meta {
+		n.meta[k] = v
+	}
+}
+
+// AddMeta adds given metadata to this document.
+func (n *Document) AddMeta(key string, value interface{}) {
+	if n.meta == nil {
+		n.meta = map[string]interface{}{}
+	}
+	n.meta[key] = value
+}
+
 // NewDocument returns a new Document node.
 func NewDocument() *Document {
 	return &Document{
 		BaseBlock: BaseBlock{},
+		meta:      nil,
 	}
 }
 
@@ -106,6 +137,13 @@ var KindTextBlock = NewNodeKind("TextBlock")
 // Kind implements Node.Kind.
 func (n *TextBlock) Kind() NodeKind {
 	return KindTextBlock
+}
+
+// Text implements Node.Text.
+//
+// Deprecated: Use other properties of the node to get the text value(i.e. TextBlock.Lines).
+func (n *TextBlock) Text(source []byte) []byte {
+	return n.Lines().Value(source)
 }
 
 // NewTextBlock returns a new TextBlock node.
@@ -131,6 +169,13 @@ var KindParagraph = NewNodeKind("Paragraph")
 // Kind implements Node.Kind.
 func (n *Paragraph) Kind() NodeKind {
 	return KindParagraph
+}
+
+// Text implements Node.Text.
+//
+// Deprecated: Use other properties of the node to get the text value(i.e. Paragraph.Lines).
+func (n *Paragraph) Text(source []byte) []byte {
+	return n.Lines().Value(source)
 }
 
 // NewParagraph returns a new Paragraph node.
@@ -243,6 +288,13 @@ func (n *CodeBlock) SetLeadingWhitespace(v textm.Segment) {
 	n.BaseBlock.SetLeadingWhitespace(v)
 }
 
+// Text implements Node.Text.
+//
+// Deprecated: Use other properties of the node to get the text value(i.e. CodeBlock.Lines).
+func (n *CodeBlock) Text(source []byte) []byte {
+	return n.Lines().Value(source)
+}
+
 // NewCodeBlock returns a new CodeBlock node.
 func NewCodeBlock() *CodeBlock {
 	return &CodeBlock{
@@ -303,6 +355,13 @@ func (n *FencedCodeBlock) Kind() NodeKind {
 	return KindFencedCodeBlock
 }
 
+// Text implements Node.Text.
+//
+// Deprecated: Use other properties of the node to get the text value(i.e. FencedCodeBlock.Lines).
+func (n *FencedCodeBlock) Text(source []byte) []byte {
+	return n.Lines().Value(source)
+}
+
 // NewFencedCodeBlock return a new FencedCodeBlock node.
 func NewFencedCodeBlock(fence []byte, info *Text) *FencedCodeBlock {
 	return &FencedCodeBlock{
@@ -345,7 +404,7 @@ type List struct {
 	Marker byte
 
 	// IsTight is a true if this list is a 'tight' list.
-	// See https://spec.commonmark.org/0.29/#loose for details.
+	// See https://spec.commonmark.org/0.30/#loose for details.
 	IsTight bool
 
 	// Start is an initial number of this ordered list.
@@ -427,23 +486,23 @@ func NewListItem(offset int) *ListItem {
 }
 
 // HTMLBlockType represents kinds of an html blocks.
-// See https://spec.commonmark.org/0.29/#html-blocks
+// See https://spec.commonmark.org/0.30/#html-blocks
 type HTMLBlockType int
 
 const (
-	// HTMLBlockType1 represents type 1 html blocks
+	// HTMLBlockType1 represents type 1 html blocks.
 	HTMLBlockType1 HTMLBlockType = iota + 1
-	// HTMLBlockType2 represents type 2 html blocks
+	// HTMLBlockType2 represents type 2 html blocks.
 	HTMLBlockType2
-	// HTMLBlockType3 represents type 3 html blocks
+	// HTMLBlockType3 represents type 3 html blocks.
 	HTMLBlockType3
-	// HTMLBlockType4 represents type 4 html blocks
+	// HTMLBlockType4 represents type 4 html blocks.
 	HTMLBlockType4
-	// HTMLBlockType5 represents type 5 html blocks
+	// HTMLBlockType5 represents type 5 html blocks.
 	HTMLBlockType5
-	// HTMLBlockType6 represents type 6 html blocks
+	// HTMLBlockType6 represents type 6 html blocks.
 	HTMLBlockType6
-	// HTMLBlockType7 represents type 7 html blocks
+	// HTMLBlockType7 represents type 7 html blocks.
 	HTMLBlockType7
 )
 
@@ -487,6 +546,7 @@ func (n *HTMLBlock) Dump(w io.Writer, source []byte, level int) {
 		cl := n.ClosureLine
 		fmt.Fprintf(w, "%sClosure: \"%s\"\n", indent2, string(cl.Value(source)))
 	}
+	fmt.Fprintf(w, "%sHasBlankPreviousLines: %v\n", indent2, n.HasBlankPreviousLines())
 	fmt.Fprintf(w, "%s}\n", indent)
 }
 
@@ -501,6 +561,17 @@ func (n *HTMLBlock) Kind() NodeKind {
 // SetLeadingWhitespace implements Node.SetLeadingWhitespace.
 func (n *HTMLBlock) SetLeadingWhitespace(v textm.Segment) {
 	// Leading whitespace is already part of an HTML block.
+}
+
+// Text implements Node.Text.
+//
+// Deprecated: Use other properties of the node to get the text value(i.e. HTMLBlock.Lines).
+func (n *HTMLBlock) Text(source []byte) []byte {
+	ret := n.Lines().Value(source)
+	if n.HasClosure() {
+		ret = append(ret, n.ClosureLine.Value(source)...)
+	}
+	return ret
 }
 
 // NewHTMLBlock returns a new HTMLBlock node.

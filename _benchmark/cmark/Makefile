@@ -8,14 +8,18 @@ endif
 .PHONY: run
 
 run: $(CMARK_BIN)
-	$(CMARK_RUN)
+	@ $(CMARK_RUN)
 	go run ./goldmark_benchmark.go
 
-./cmark-master/build/src/config.h:
+./cmark-master/Makefile:
 	wget -nc -O cmark.zip https://github.com/commonmark/cmark/archive/master.zip
 	unzip cmark.zip
 	rm -f cmark.zip
 	cd cmark-master && make
 
-$(CMARK_BIN): ./cmark-master/build/src/config.h
-	gcc -I./cmark-master/build/src -I./cmark-master/src  cmark_benchmark.c -o $(CMARK_BIN) -L./cmark-master/build/src -lcmark
+$(CMARK_BIN): ./cmark-master/Makefile cmark_benchmark.c
+	gcc -I./cmark-master/build/src -I./cmark-master/src  cmark_benchmark.c -o $(CMARK_BIN) -L./cmark-master/build/src -lcmark; \
+
+.PHONY: clean
+clean:
+	rm -f $(CMARK_BIN)

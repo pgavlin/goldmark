@@ -61,7 +61,7 @@ bar | baz
 </thead>
 <tbody>
 <tr>
-<td>b <code>\|</code> az</td>
+<td>b <code>|</code> az</td>
 </tr>
 <tr>
 <td>b <strong>|</strong> im</td>
@@ -235,3 +235,59 @@ foo|bar
 </tbody>
 </table>
 //= = = = = = = = = = = = = = = = = = = = = = = =//
+
+
+11: Tables can interrupt paragraph
+//- - - - - - - - -//
+**xxx**
+| hello |   hi  |
+| :----: | :----:|
+//- - - - - - - - -//
+<p><strong>xxx</strong></p>
+<table>
+<thead>
+<tr>
+<th align="center">hello</th>
+<th align="center">hi</th>
+</tr>
+</thead>
+</table>
+//= = = = = = = = = = = = = = = = = = = = = = = =//
+
+12: A delimiter can not start with more than 3 spaces
+//- - - - - - - - -//
+Foo
+    ---
+//- - - - - - - - -//
+<p>Foo
+---</p>
+//= = = = = = = = = = = = = = = = = = = = = = = =//
+
+13: A delimiter can not start with more than 3 spaces(w/ tabs)
+    OPTIONS: {"enableEscape": true}
+//- - - - - - - - -//
+- aaa
+
+  Foo
+\t\t---
+//- - - - - - - - -//
+<ul>
+<li>
+<p>aaa</p>
+<p>Foo
+---</p>
+</li>
+</ul>
+//= = = = = = = = = = = = = = = = = = = = = = = =//
+
+14: Delimiter-like line inside a list item
+//- - - - - - - - -//
+- [Marketing](marketing/_index.md)
+--
+//- - - - - - - - -//
+<ul>
+<li><a href="marketing/_index.md">Marketing</a>
+--</li>
+</ul>
+//= = = = = = = = = = = = = = = = = = = = = = = =//
+

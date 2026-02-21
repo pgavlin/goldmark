@@ -2,12 +2,13 @@
 package goldmark
 
 import (
+	"io"
+
 	"github.com/pgavlin/goldmark/parser"
 	"github.com/pgavlin/goldmark/renderer"
 	"github.com/pgavlin/goldmark/renderer/html"
 	"github.com/pgavlin/goldmark/text"
 	"github.com/pgavlin/goldmark/util"
-	"io"
 )
 
 // DefaultParser returns a new Parser that is configured by default values.

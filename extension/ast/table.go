@@ -2,9 +2,10 @@ package ast
 
 import (
 	"fmt"
-	gast "github.com/pgavlin/goldmark/ast"
 	"io"
 	"strings"
+
+	gast "github.com/pgavlin/goldmark/ast"
 )
 
 // Alignment is a text alignment of table cells.
@@ -46,7 +47,7 @@ type Table struct {
 	Alignments []Alignment
 }
 
-// Dump implements Node.Dump
+// Dump implements Node.Dump.
 func (n *Table) Dump(w io.Writer, source []byte, level int) {
 	gast.DumpHelper(w, n, source, level, nil, func(level int) {
 		indent := strings.Repeat("    ", level)
@@ -98,7 +99,7 @@ func (n *TableRow) Kind() gast.NodeKind {
 
 // NewTableRow returns a new TableRow node.
 func NewTableRow(alignments []Alignment) *TableRow {
-	return &TableRow{}
+	return &TableRow{Alignments: alignments}
 }
 
 // A TableHeader struct represents a table header of Markdown(GFM) text.

@@ -1,4 +1,4 @@
-package main
+package benchmark
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"github.com/pgavlin/goldmark/util"
 	"gitlab.com/golang-commonmark/markdown"
 
-	bf2 "gopkg.in/russross/blackfriday.v2"
+	"github.com/russross/blackfriday/v2"
 
 	"github.com/88250/lute"
 )
@@ -19,7 +19,7 @@ import (
 func BenchmarkMarkdown(b *testing.B) {
 	b.Run("Blackfriday-v2", func(b *testing.B) {
 		r := func(src []byte) ([]byte, error) {
-			out := bf2.Run(src)
+			out := blackfriday.Run(src)
 			return out, nil
 		}
 		doBenchmark(b, r)
@@ -58,8 +58,8 @@ func BenchmarkMarkdown(b *testing.B) {
 		luteEngine.SetAutoSpace(false)
 		luteEngine.SetFixTermTypo(false)
 		r := func(src []byte) ([]byte, error) {
-			out, err := luteEngine.MarkdownStr("Benchmark", util.BytesToReadOnlyString(src))
-			return util.StringToReadOnlyBytes(out), err
+			out := luteEngine.MarkdownStr("Benchmark", util.BytesToReadOnlyString(src))
+			return util.StringToReadOnlyBytes(out), nil
 		}
 		doBenchmark(b, r)
 	})

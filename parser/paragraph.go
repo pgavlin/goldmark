@@ -3,6 +3,7 @@ package parser
 import (
 	"github.com/pgavlin/goldmark/ast"
 	"github.com/pgavlin/goldmark/text"
+	"github.com/pgavlin/goldmark/util"
 )
 
 type paragraphParser struct {
@@ -28,18 +29,17 @@ func (b *paragraphParser) Open(parent ast.Node, reader text.Reader, pc Context) 
 	}
 	node := ast.NewParagraph()
 	node.Lines().Append(segment)
-	reader.Advance(segment.Len() - 1)
+	reader.AdvanceToEOL()
 	return node, NoChildren
 }
 
 func (b *paragraphParser) Continue(node ast.Node, reader text.Reader, pc Context) State {
-	_, segment := reader.PeekLine()
-	trimmed := segment.TrimLeftSpace(reader.Source())
-	if trimmed.IsEmpty() {
+	line, segment := reader.PeekLine()
+	if util.IsBlank(line) {
 		return Close
 	}
 	node.Lines().Append(segment)
-	reader.Advance(segment.Len() - 1)
+	reader.AdvanceToEOL()
 	return Continue | NoChildren
 }
 
